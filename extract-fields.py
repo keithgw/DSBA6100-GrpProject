@@ -104,10 +104,8 @@ def extract_fields(company, patent_file):
     # transform dictionary to pandas DataFrame
     df = pd.DataFrame(fields)
     # write DataFrame as a .csv
-    #df.to_csv('testcsv.csv')
-    print fields
-    print '=' * 30
-    print df
+    df.to_csv('testcsv.csv')
+    
     #sys.stdout.write(', '.join(fields['patent_abstract']))
     
 
