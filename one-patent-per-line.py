@@ -9,7 +9,7 @@ if __name__ == "__main__":
     
     # stdin is a file object, "standard input"
     for line in sys.stdin.readlines():
-        line = sub('\n', ' ', line)
+        line = sub('\n', ' <endline> ', line)
         line = sub('\</us-patent-grant\>', '\n', line)
         one_patent_per_line += line
         

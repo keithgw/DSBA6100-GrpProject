@@ -8,7 +8,9 @@ import re as re
 import pandas as pd
 
 COMPANY = 'Medtronic' # modify for each company
-TESTFILE = open('C:\Users\keithg.williams\Documents\DSBA-6100\DSBA-6100-Group-Project\widetestpatent.txt')
+
+# Change path to location of one-per-line.txt
+TESTFILE = open('C:\Users\keithg.williams\Documents\DSBA-6100\DSBA6100-GrpProject\oppl.txt')
     
 def extract_fields(company, patent_file):
     
@@ -104,7 +106,7 @@ def extract_fields(company, patent_file):
     # transform dictionary to pandas DataFrame
     df = pd.DataFrame(fields)
     # write DataFrame as a .csv
-    df.to_csv('testcsv.csv')
+    df.to_csv('wk1test.csv')
     
     #sys.stdout.write(', '.join(fields['patent_abstract']))
     
