@@ -1,0 +1,107 @@
+---
+title: "Instructions for Extracting Patents"
+author: "Keith G. Williams"
+date: "Monday, September 21, 2015"
+output: pdf_document
+---
+
+## Objective  
+
+This document is intended to help you extract your assigned patents. First, you will need to make sure your machine is set up to run the scripts. Then, you can follow the instructions to extract your assigned patents.
+
+## Set-up Your Machine
+
+You will need software, scripts, and data to run your portion.  
+
+### Software:  
+
+- shell environment (bash). Similar to putty, this will allow you to run unix commands on your local machine. I use git bash, but cygwin is also popular. Both are free. [Download git bash here.](https://git-for-windows.github.io/)  
+- python. If you have cygwin, python was likely installed at the same time. Otherwise, get it here [https://www.python.org/downloads/](https://www.python.org/downloads/)  
+
+### Scripts:  
+
+You will need one python script, which will be part of a Unix pipeline.  
+- `one-patent-per-line.py`  
+
+You can get this file from the github repository I have set up for this project.  
+[github.com/keithgw/DSBA6100-GrpProject](https://github.com/keithgw/DSBA6100-GrpProject)  
+In the right margin, you will see a "Download ZIP" button, or you can copy the https clone url and from git bash type `git clone URL`, where `URL` is the copied clone url from github.
+
+### Data:
+
+Each of us will be responsible for 2 years of patent data:  
+- 2005-06 Keith  
+- 2007-08 Dakshinya  
+- 2009 Chanakya (only 1 year, instead of 2)  
+- 2010-11 Anusha  
+- 2012-13 Nisha  
+- 2014-15 Aditya  
+
+The data is stored on the uncc server in the `patBiblio2000_1h2015` directory.  To get it on your local machine, you will need to move it into your home folder on the uncc server, then use WinSCP or something like it to move the files from your uncc home folder to your local machine. The files of interest have the format `ipgbYYYYMMDD_wkXX.zip`  
+1. Open git bash  
+2. Log into uncc server:  
+```{r, eval=FALSE}
+ssh username@dsba-hadoop.uncc.edu
+
+# you will be prompted for your password
+
+# navigate to the patent data folder
+cd dsba-6100/patentData2000_2015
+
+# copy the biblio data to your home folder
+cp -r patBiblio2000_1h2015/ users/username
+```  
+3. Now, you will need to copy only the files you are responsible for to your local machine using WinSCP or similar. For example, I am responsible for 2005-2006, so I will copy `ipgb2005*wk01.zip` through `ipgb2006*wk52.zip` - a total of 104 .zip files - to my local machine.
+
+## Running the Process
+
+### Get Set-up
+
+My rough calculation is that it will take approximately 20 hours for your machine to iteratively unzip each of your 104-5 files, process, and filter them. Before you start, you need to make sure you have the file structure set-up appropriately on your local machine.  
+1. Open File Explorer, and find the folder where you copied your zipped patent files. Be sure that the zipped files are the only thing in this folder. For example, I have moved my files into `users/keithg.williams/My Documents/MyPatentFiles`, and there are 104 `.zip` files in this directory.  
+2. Move `one-patent-per-line.py` into the *parent directory* of your patent files. For example, my python script is in `users/keithg.williams/My Documents` this is equivalent to `../MyPatentFiles`. It is imperative that the python script **NOT** be in the same folder as the patent zipped files, or it will be deleted during the process.  
+3. Create a blank plain text file to which you will append all of your processed data. At the git bash prompt, navigate to the folder where your patent data is stored. For me: `cd "~/My Documents/MyPatentFiles"` Now run the following command:  
+```{r, eval=FALSE}
+cat > ../opplYY.txt # Replace YY with the first year of your assigned patents
+# For me, it would be ../oppl05.txt, since I am assigned years 05-06
+```  
+You will need to press 'ctrl-D' after typing the above command.  
+Confirm that the file was created.
+
+### Zipped files to filtered one-patent-per-line
+
+Now, it's show time.  
+
+1. At the git bash prompt, navigate to the folder where your patent files are stored. For me: `cd "~/My Documents/MyPatentFiles"`  
+2. Type the following commands. The only difference will be your `opplYY.txt` file should be the exact name of the plain text file you created in step 3 above.  Nothing will happen until after the `done` line.  
+
+*You will need to place the following regular expression inside the double quotes after `grep -i -E`. The whole line will not fit on the page of the pdf*  
+`medtronic|covidien|stryker|boston scientific|abbott`
+```{r, eval=FALSE}
+# set shell options to set extended pattern matching
+shopt -s extglob
+
+# iterate over each .zip file, and process
+for file in ipgb*.zip
+do
+unzip "$file"
+cat *.xml | python ../one-patent-per-line.py | grep -i -E "" >> ../opplYY.txt
+rm *.!(zip)
+done
+```  
+
+DOUBLE CHECK ALL OF YOUR SPELLING BEFORE YOU WALK AWAY. Make sure you put the regular expression inside the double quotes of the grep command. If you need to interrupt, and start over, you can press `ctrl-c` to exit the program. You will need to delete the `opplYY.txt` file, and create a blank one before restarting the iterative process.
+
+You will know it's working if every 13 minutes or so, you see this type of output:  
+```{r, eval=FALSE}
+Archive:  ipgb20050104_wk01.zip
+  inflating: ipgb20050104.xml
+  inflating: ipgb20050104lst.txt
+  inflating: ipgb20050104rpt.txt
+Archive:  ipgb20050111_wk02.zip
+  inflating:  ...
+```
+
+There should be no ERROR statments or `sh.exe command not found` statements. If so, triple check your spelling again. Contact me if you are having issues.
+
+### Message me when your process is running

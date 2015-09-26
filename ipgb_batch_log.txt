@@ -1,0 +1,26 @@
+# Log for batch runs raw .zip to oppl.txt
+
+# no grep, no extglob
+#7:48
+#10:20 14 .xml files processed
+# wc -l oppl.txt ##48154
+# 11 / 16 files had appropriately structured.xml files
+
+# with grep "medtronic", with extglob, expecting 125 patents
+# start line 17   11:51
+# finish ipgb2015  2:16
+# 11 files, 144 minutes = 13 min/file
+# 546 weeks -> 7098 minutes = 118 hr = 4.93 days
+
+# difference btw ipgb, pba, pgb ??
+# May cut down from 796 files to processed
+# ANSWER: ipgb relates to 2005-2015,
+#          pgb relates to 2001-2004,
+#          pba relates to 2000
+
+# Start 11:05pm Wed FAILED RegEx no -E option
+
+# Start 7:20am Thursday 05-06 batch
+# End   2:10pm Thursday 710 minutes
+
+# Start 3:30pm Thursday 09/14/15 batch

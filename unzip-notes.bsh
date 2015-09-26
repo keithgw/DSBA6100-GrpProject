@@ -14,26 +14,9 @@ shopt -s extglob
 
 # In the patent biblio directory, run the following:
 
-for file in *.zip # consider chng to only ipgb*.zip
+for file in ipgb*.zip # consider chng to only ipgb*.zip
 do
 unzip "$file"
-cat *.xml | python ../one-patent-per-line.py | grep -i "medtronic" >> ../oppl.txt
+cat *.xml | python ../one-patent-per-line.py | grep -i -E "medtronic|covidien|stryker|boston scientfic|abbott" >> ../oppl05.txt
 rm *.!(zip)
 done
-
-# no grep, no extglob
-#7:48
-#10:20 14 .xml files processed
-# wc -l oppl.txt ##48154
-# 11 / 16 files had appropriately structured.xml files
-
-# with grep "medtronic", with extglob, expecting 125 patents
-# 11:51
-# 8 @ 12:41
-# 
-
-# difference btw ipgb, pba, pgb ??
-# May cut down from 796 files to processed
-# ANSWER: ipgb relates to 2005-2015,
-#          pgb relates to 2001-2004,
-#          pba relates to 2000

@@ -1,18 +1,27 @@
-# Takes as an input a .txt file in which each patent is on its own line:
-# an output of one-patent-per-line.py | grep -i "COMPANY" > out.txt
-#
+# Takes as an input a list of .txt files in which each patent is on its own 
+# line: an output of one-patent-per-line.py | grep -i "COMPANY" > out.txt
 # Extracts fields for output as a tidy .csv
 
 import sys as sys
 import re as re
 import pandas as pd
 
-COMPANY = 'Medtronic' # modify for each company
-
-# Change path to location of one-per-line.txt
-TESTFILE = open('C:\Users\keithg.williams\Documents\DSBA-6100\DSBA6100-GrpProject\oppl.txt')
-    
-def extract_fields(company, patent_file):
+def oppl_to_df(company, patent_file):
+    """Takes a wide patent file, and returns a pandas DataFrame
+    Inputs:
+        company: string of company name
+        patent_file: .txt file where each patent owned by company is on a single line
+    Ouput:
+        pandas DataFrame, where rows are patents, and columns are the features:
+            company name
+            patent assignee
+            year granted
+            year applied
+            patent class
+            patent number
+            patent title
+            patent abstract
+    """
     
     # initialize fields as a dictionary
     fields = {'company_name' : [],
@@ -39,7 +48,7 @@ def extract_fields(company, patent_file):
         # and append them to appropriate dictionary value
         
         # attach company name
-        fields['company_name'].append(COMPANY)
+        fields['company_name'].append(company)
         
         # extract patent assignee
         assignee = re.search(assignee_re, line)
@@ -104,12 +113,25 @@ def extract_fields(company, patent_file):
             fields['patent_abstract'].append('None')
             
     # transform dictionary to pandas DataFrame
-    df = pd.DataFrame(fields)
-    # write DataFrame as a .csv
-    df.to_csv('wk1test.csv')
+    return pd.DataFrame(fields)
+        
+def run():
+    # paths to patent files for each company. Each patent is on a single line.
+    oppl_medtronic = open('../oppl_medtronic.txt')
+    oppl_stryker = open('../oppl_stryker.txt')
+    oppl_bs = open('../oppl_boston_scientific.txt')
+    oppl_abbott = open('../oppl_abbott.txt')
     
-    #sys.stdout.write(', '.join(fields['patent_abstract']))
+    # define lists of companies, and the patent files for feature extraction loop
+    oppl_files = [oppl_medtronic, oppl_stryker, oppl_bs, oppl_abbott]
+    companies = ['Medtronic', 'Stryker', 'Boston Scientific', 'Abbott']
     
+    # convert each patent file into a tidy pandas data frame
+    dfs = [oppl_to_df(companies[i], oppl_files[i]) for i in range(len(companies))]
+    
+    # concatenate the data frames, and write to .csv
+    df_combined = pd.concat(dfs, ignore_index=True)
+    df_combined.to_csv('medtronic_and_competitor_patents_05-15.csv', index=False)
 
 if __name__ == "__main__":
-    extract_fields(COMPANY, TESTFILE)
+    run()
