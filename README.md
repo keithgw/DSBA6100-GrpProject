@@ -19,3 +19,5 @@
 - widetestpatent.txt is a proof of concept of one-patent-per-line.py run on tesetpatent.xml  
 - oppl.txt is a proof of concept of unzip-notes.bsh done on all of the wk1 patent files from 2005-2015.  
 - wk1test.csv is a proof of concept of extract-fields.py run on oppl.txt  
+- medtronic_and_competitor_patents_05-15.csv is the cleaned CSV after the output of extract-fields.py  
+- raw-to-csv.Rmd is a description of the data cleaning process.  
