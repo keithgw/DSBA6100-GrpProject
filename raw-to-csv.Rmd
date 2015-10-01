@@ -1,7 +1,7 @@
 ---
-title: 'Group Homework: Data Preparation'
+title: 'Group Project Part I: Data Wrangling'
 author: "Wranglers"
-date: "Saturday, September 26, 2015"
+date: "Wednesday, October 7, 2015"
 output: word_document
 ---
 
@@ -16,11 +16,81 @@ output: word_document
 
 # Data Preparation
 
-The data for patent bibliographic data exists in 533 zipped files. The format for the relevant data is pseudo-xml. The following process is used to extract the cleaned data:  
+The data for patent bibliographic data exists in 533 zipped files. The format for the relevant data is pseudo-xml. The following process is used to extract and clean the data:  
 
-### 1. Unzip and Transform Raw `ipgbXXXXXXXX_wkXX.xml` Files  
+#### 1. Unzip and Transform Raw `ipgbXXXXXXXX_wkXX.xml` Files  
 
-Each `*.zip` file is extracted, and the `.xml` transformed, so that each patent is on a single line. These patent per line files are filtered, so that only patents belonging to our company and its competitors are kept. Shell code:   
+Each `*.zip` file is iteratively extracted, and, using regular expressions, the `.xml` transformed, so that each patent is on a single line. These patent per line files are filtered, so that only patents belonging to our company and its competitors are kept. See *Figure 1* for the shell code.   
+
+
+#### 2. Prepare Each Company's Patents for Feature Extraction  
+
+The one patent per line text file is split into 4 files: one for the patents belonging to our company, and three for each of our closest competitors. See *Figure 2* for the shell code.  
+
+#### 3. Use Regex to Extract Fields and Write .csv
+
+Each of the four one patent per line patent files are processed using a Python script (*Figure 3*). The resulting file is a .csv, where each row is a single patent and each column is a feature of that patent. The features are:  
+- Company Name  
+- Patent Assignee  
+- Year Granted  
+- Year Applied  
+- Patent Class  
+- Patent Number  
+- Patent Title  
+- Patent Abstract
+
+*Figures 4 & 5* visualize word frequencies found in patent titles and patent abstracts for our company, Medtronic.
+
+# Patent Ratios
+
+The USPTO website was used to query the number of patents per year over the last 10 years for Medtronic and its three closest competitors: Stryker, Boston Scientific, and Abbott. These numbers were compared to the number of patents for each company mined from the patent bibliographic data (*Figures 6, 7, & 8*). Nearly 100% of the reported patents were mined from the bibliographic data.
+
+```{r, echo=FALSE, message=FALSE}
+# load libraries
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(knitr)
+
+# define uspto patent counts
+med_actual <- c(257, 306, 317, 214 + 18, 286 + 46, 525 + 74, 
+                522 + 49, 581 + 117, 668 + 808, 723 + 700, 151 + 216)
+stryker_actual <- c(33, 30, 27, 31, 48, 65, 82, 94, 116, 117, 21)
+bs_actual <- c(86, 146, 156, 192, 274, 474, 507, 477, 504, 561, 100)
+abbott_actual <- c(54, 101, 85, 101, 115, 253, 433, 505, 508, 449, 76)
+
+# load mined .csv
+setwd('~/DSBA-6100/DSBA6100-GrpProject/')
+patent_file <- 'medtronic_and_competitor_patents_05-15.csv'
+patents <- read.csv(patent_file, stringsAsFactors=FALSE)
+
+# count mined patents by company by year
+patent_counts <- patents %>% 
+    group_by(company_name, year_granted) %>% 
+    summarise(mined = n()) 
+patent_counts$uspto <- c(abbott_actual, bs_actual, med_actual, stryker_actual)
+
+# compare mined patent counts to reported USPTO patent counts
+patent_ratios <- gather(patent_counts, "mined", "uspto", 3:4)
+names(patent_ratios)[3:4] <- c("source_found","count")
+```
+
+# Other Relevant Data
+
+- Compare patents utilized vs. non utilized (utilization = products implemented)  
+- Connect patent(s) with products and products to revenue data  
+    - Product line information  
+- Revenue information by product (SEC Filings 10K/10Q)  
+- Macro economic scenario for medical industry  
+- Patent classification is alpha numeric- dictionary of these codes and translate them to business information  
+- Medical eco system: Wearable technology (FitBit, Jawbone, Google Lens etc.)
+
+# Appendix
+
+#### Figure 1 
+
+Shell script for extracting, transforming, and filtering patent .xml files.
+
 ```{r eval=FALSE}
 shopt -s extglob #set shell options
 
@@ -36,9 +106,10 @@ rm *.!(zip)
 done
 ```
 
-### 2. Prepare Each Company Patents for Feature Extraction  
+#### Figure 2
 
-The one patent per line text file is split into 4 files: one for the patents belonging to our company, and three for each of our closest competitors:  
+Shell script for splitting one patent per line file into 4 files, one for each company.
+
 ```{r eval=FALSE}
 grep -i -E "<assignee>.*?medtronic.*?</orgname|<assignee>.*?covidien.*?</orgname" oppl.txt > oppl_medtronic.txt
 grep -i -E "<assignee>.*?stryker.*?</orgname" oppl.txt > oppl_stryker.txt
@@ -46,16 +117,18 @@ grep -i -E "<assignee>.*?boston scientific.*?</orgname" oppl_combined.txt > oppl
 grep -i -E "<assignee>.*?abbott.*?</orgname" oppl_combined.txt > oppl_abbott.txt
 ```
 
-### 3. Use Regex to Extract Fields and Write .csv
+#### Figure 3
+
+Python script for creating structured .csv.
 
 ```{r eval=FALSE}
 # Takes as an input a list of .txt files in which each patent is on its own 
 # line: an output of one-patent-per-line.py | grep -i "COMPANY" > out.txt
 # Extracts fields for output as a tidy .csv
 
-import sys as sys
-import re as re
-import pandas as pd
+import sys as sys    # for unix pipes
+import re as re      # for regular expressions
+import pandas as pd  # for structured data tables
 
 def oppl_to_df(company, patent_file):
     """Takes a wide patent file, and returns a pandas DataFrame
@@ -188,39 +261,36 @@ if __name__ == "__main__":
     run()
 ```
 
-# Patent Ratios
+#### Figure 4
 
-The USPTO website was used to query the number of patents per year over the last 10 years for Medtronic and its three closest competitors: Stryker, Boston Scientific, and Abbott. These numbers were compared to the number of patents for each company mined from the patent bibliographic data. All visulizations done in R.  
+Visualization of word freqencies in Medtronic patent titles. R code provided.
 
-```{r, echo=FALSE, message=FALSE}
-# load libraries
-library(dplyr)
-library(ggplot2)
-library(tidyr)
-library(knitr)
+```{r, message=FALSE, warning=FALSE}
+library(wordcloud)   # Package for word clouds
+library(wesanderson) # color palettes
 
-# define uspto patent counts
-med_actual <- c(257, 306, 317, 214 + 18, 286 + 46, 525 + 74, 
-                522 + 49, 581 + 117, 668 + 808, 723 + 700, 151 + 216)
-stryker_actual <- c(33, 30, 27, 31, 48, 65, 82, 94, 116, 117, 21)
-bs_actual <- c(86, 146, 156, 192, 274, 474, 507, 477, 504, 561, 100)
-abbott_actual <- c(54, 101, 85, 101, 115, 253, 433, 505, 508, 449, 76)
+# filter company equal to Medtronic
+med <- patents %>% filter(company_name == 'Medtronic')
 
-# load mined .csv
-setwd('~/DSBA-6100/group project/patent_csvs/')
-patent_file <- 'medtronic_and_competitor_patents_05-15.csv'
-patents <- read.csv(patent_file, stringsAsFactors=FALSE)
-
-# count mined patents by company by year
-patent_counts <- patents %>% 
-    group_by(company_name, year_granted) %>% 
-    summarise(mined = n()) 
-patent_counts$uspto <- c(abbott_actual, bs_actual, med_actual, stryker_actual)
-
-# compare mined patent counts to reported USPTO patent counts
-patent_ratios <- gather(patent_counts, "mined", "uspto", 3:4)
-names(patent_ratios)[3:4] <- c("source_found","count")
+# visualize patent titles
+palette <- wes_palette("Darjeeling", 5, "discrete")
+palette <- palette[5:1]
+wordcloud(med$patent_title, max.words=150, colors=palette)
 ```
+
+#### Figure 5
+
+Visualization of word frequencies in Medtronic patent abstracts. R code provied.
+
+```{r}
+# visualize patent abstracts
+wordcloud(med$patent_abstract, max.words=150, colors=palette)
+```
+
+#### Figure 6
+
+By year comparison of mined patents to patents reported on the USPTO website. R code for creating visualization provided.
+
 ```{r, fig.height=5, fig.width=8}
 # visualize ratios by year
 plot_ratios <- ggplot(patent_ratios, aes(company_name, count, fill=source_found)) +
@@ -232,6 +302,11 @@ plot_ratios <- ggplot(patent_ratios, aes(company_name, count, fill=source_found)
     theme(axis.text.x = element_text(angle=90, hjust=1, vjust=0.5))
 plot_ratios
 ```
+
+#### Figure 7
+
+Comparison of total mined patents to patents reported on the USPTO website from 2005 to March 2015. R code for creating visualization provided.
+
 ```{r, fig.width=8}
 # visualize ratios: total by company
 plot_totals <- ggplot(patent_ratios, aes(company_name, count, fill=source_found)) +
@@ -241,34 +316,12 @@ plot_totals <- ggplot(patent_ratios, aes(company_name, count, fill=source_found)
               y = "Number of Patents")) +
     theme(title = element_text(size = 16))
 plot_totals
+```
 
+#### Figure 8
+
+Table of mined *vs.* reported patents.
+
+```{r, echo=FALSE}
 kable(patent_counts, align='c')
 ```
-
-# Visualize Abstracts and Titles for Medtronic
-
-```{r, message=FALSE, warning=FALSE}
-library(wordcloud)
-library(wesanderson)
-
-# filter company equal to Medtronic
-med <- patents %>% filter(company_name == 'Medtronic')
-
-# visualize patent titles
-palette <- wes_palette("Darjeeling", 5, "discrete")
-palette <- palette[5:1]
-wordcloud(med$patent_title, max.words=150, colors=palette)
-
-# visualize patent abstracts
-wordcloud(med$patent_abstract, max.words=150, colors=palette)
-```
-
-# Other Relevant Data
-
-- Compare patents utilized vs. non utilized (utilization = products implemented)  
-- Connect patent(s) with products and products to revenue data  
-    - Product line information  
-- Revenue information by product (SEC Filings 10K/10Q)  
-- Macro economic scenario for medical industry  
-- Patent classification is alpha numeric- dictionary of these codes and translate them to business information  
-- Medical eco system: Wearable technology (FitBit, Jawbone, Google Lens etc.)  
