@@ -163,7 +163,7 @@ def oppl_to_df(company, patent_file):
     date_tags = '<publication-reference>.*<date>|</date>.*'
     id_tags = '<publication-reference>.*<doc-number>|</doc-number>.*'
     app_ref_re = '<application-reference.*?</application-reference>'
-    class_re = '</classification-locarno>.*?</main-classification>'
+    class_re = 'main-classification.*?<country>US.*?<main-classification>.*?</main-classification>'
     title_re = '<invention-title.*?</invention-title>'
     abstract_re = '<abstract.*?</abstract>'
   
@@ -209,7 +209,7 @@ def oppl_to_df(company, patent_file):
         # extract patent classification
         classification = re.search(class_re, line)
         if classification:
-            patent_class = re.sub('</class.*<main-classification>|</main.*',
+            patent_class = re.sub('.*<main-classification>|</main.*',
                                   '',
                                   classification.group())
             fields['patent_class'].append(patent_class)
@@ -229,7 +229,7 @@ def oppl_to_df(company, patent_file):
         # extract patent abstract
         abstract_field = re.search(abstract_re, line)
         if abstract_field:
-            abstract = re.sub('<abstract.*<p.*?>|</abstract>',
+            abstract = re.sub('<abstract.*<p.*?>|</abstract>| <endline> ',
                               '',
                               abstract_field.group())
             fields['patent_abstract'].append(abstract)
