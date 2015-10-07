@@ -1,0 +1,22 @@
+# script for unzipping files, and processing them
+
+# before unzipping:
+
+## create oppl.txt to be appended
+cat > ../oppl.txt
+#ctrl-d to close
+
+## copy one-patent-per-line.py into parent directory
+cp <path to one-patent-per-line.py> ../
+
+## set shell options to set extended pattern matching
+shopt -s extglob
+
+# In the patent biblio directory, run the following:
+
+for file in ipgb*.zip # consider chng to only ipgb*.zip
+do
+unzip "$file"
+cat *.xml | python ../one-patent-per-line.py | grep -i -E "medtronic|covidien|stryker|boston scientfic|abbott" >> ../oppl05.txt
+rm *.!(zip)
+done
