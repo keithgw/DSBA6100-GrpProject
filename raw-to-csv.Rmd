@@ -265,7 +265,7 @@ if __name__ == "__main__":
 
 Visualization of word freqencies in Medtronic patent titles. R code provided.
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, fig.height=7, fig.width=7.5}
 library(wordcloud)   # Package for word clouds
 library(wesanderson) # color palettes
 
@@ -273,18 +273,42 @@ library(wesanderson) # color palettes
 med <- patents %>% filter(company_name == 'Medtronic')
 
 # visualize patent titles
-palette <- wes_palette("Darjeeling", 5, "discrete")
+palette <- wes_palette("Darjeeling", 5, "continuous")
 palette <- palette[5:1]
-wordcloud(med$patent_title, max.words=150, colors=palette)
+wordcloud(med$patent_title, max.words=150, random.order=FALSE, colors=palette)
 ```
 
 #### Figure 5
 
 Visualization of word frequencies in Medtronic patent abstracts. R code provied.
 
-```{r}
-# visualize patent abstracts
-wordcloud(med$patent_abstract, max.words=150, colors=palette)
+```{r, fig.height=7, fig.width=7, warning=FALSE}
+library(RWeka)       # NLP (n-grams)
+library(tm)          # text mining
+library(slam)        # for simple triplet matrix algebra
+
+# process abstracts for visualization
+abstracts <- VCorpus(VectorSource(med$patent_abstract))
+abstracts <- tm_map(abstracts, content_transformer(tolower))
+abstracts <- tm_map(abstracts, removeWords, stopwords("english"))
+
+# count trigrams for abstracts
+count_ngrams <- function(n, corp) {
+    options(mc.cores = 2)
+    ctrl <- Weka_control(min = n, max = n)
+    ngram_tokenizer <- function(x) NGramTokenizer(x, control = ctrl)
+    tdm_ngram <- TermDocumentMatrix(corp, 
+                                    control = list(tokenize = ngram_tokenizer))
+    return(tdm_ngram)
+}
+abstract_trigrams <- count_ngrams(3, abstracts)
+
+# convert TDM to a format wordcloud can use
+wc <- row_sums(abstract_trigrams)
+abstract_wc <- data.frame(trigram = names(wc), count = wc)
+
+# visualize abstracts
+wordcloud(abstract_wc$trigram, abstract_wc$count, scale=c(2.5, .5), min.freq=50, random.order=FALSE, colors=palette)
 ```
 
 #### Figure 6

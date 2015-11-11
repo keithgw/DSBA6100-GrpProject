@@ -14,7 +14,7 @@ shopt -s extglob
 
 # In the patent biblio directory, run the following:
 
-for file in ipgb*.zip # consider chng to only ipgb*.zip
+for file in ipgb*.zip
 do
 unzip "$file"
 cat *.xml | python ../one-patent-per-line.py | grep -i -E "medtronic|covidien|stryker|boston scientfic|abbott" >> ../oppl05.txt

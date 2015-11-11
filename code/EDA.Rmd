@@ -110,7 +110,7 @@ count_ngrams <- function(n, corp) {
     return(tdm_ngram)
 }
 abstract_trigrams <- count_ngrams(3, abstracts)
-abstract_trigrams <- removeSparseTerms(abstract_trigrams, 0.4)
+# abstract_trigrams <- removeSparseTerms(abstract_trigrams, 0.4)
 wc <- row_sums(abstract_trigrams)
 abstract_wc <- data.frame(trigram = names(wc), count = wc)
 
@@ -121,14 +121,6 @@ wordcloud(abstract_wc$trigram, abstract_wc$count, scale=c(2, .5), min.freq=50, r
 palette <- wes_palette("Darjeeling", 10, "continuous")
 palette <- palette[10:1]
 wordcloud(med$patent_title, max.words=150, colors=palette)
-
-# visualize patent abstracts
-ngram_freq <- data.frame(ngram = trigrams) %>%
-    group_by(ngram) %>%
-    summarise(count = n())
-
-filtered <- filter(abstracts, count < 3000, count > 200)
-wordcloud(ngram_freq$ngram, ngram_freq$count, max.words=300, colors=palette)
 ```
 
 ```{r}

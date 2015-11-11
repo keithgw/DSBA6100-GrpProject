@@ -1,0 +1,19 @@
+---
+title: "Patent Cleaning"
+author: "Keith G. Williams"
+date: "Monday, November 09, 2015"
+output: html_document
+---
+
+```{r}
+library(stringr)
+
+# load patent csv
+patents_raw <- read.csv(patent_file, stringsAsFactors=FALSE, na.strings="None")
+
+# remove duplicate entries
+patents <- unique(patents_raw)
+
+# remove leading zero from patent numbers
+patents$patent_number <- str_replace(patents$patent_number, '0', '')
+```
